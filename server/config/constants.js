@@ -24,5 +24,11 @@ module.exports = {
       userExists: 'Benutzer existiert bereits',
       serverError: 'Server Fehler'
     }
+  },
+  session: {
+    defaultSecret: 'your-session-secret'
+  },
+  mongodb: {
+    defaultUri: 'mongodb://localhost:27017/your-db-name'
   }
 };

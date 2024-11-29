@@ -1,23 +1,23 @@
 # Dependencies
 node_modules/
-*/node_modules/
+
+# MongoDB data
+data/
+mongodb-data/
+server/data/
+*.wt
+WiredTiger*
+*.0000*
+diagnostic.data/
+journal/
 
 # Environment
 .env
 .env.*
 
-# MongoDB data and logs
-data/
-*/data/
-server/data/
-mongodb-data/
-*.wt
-WiredTiger*
-mongod.lock
-*.0000*
-diagnostic.data/
-journal/
+# Logs
 *.log
+logs/
 
 # OS
 .DS_Store
@@ -30,8 +30,3 @@ journal/
 # Build
 dist/
 build/
-
-# Debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*

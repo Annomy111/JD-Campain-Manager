@@ -85,7 +85,11 @@ app.use(passport.session());
 require('./server/config/passport');
 
 // Serve static files from the React app
-app.use(express.static(path.join(__dirname, 'client/build')));
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'client/build')));
+} else {
+  app.use(express.static(path.join(__dirname, 'client/public')));
+}
 
 // API Routes
 app.use('/api/auth', require('./server/routes/auth'));
@@ -106,7 +110,11 @@ app.get('/api/health', (req, res) => {
 // The "catchall" handler: for any request that doesn't match an API route,
 // send back React's index.html file.
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build/index.html'));
+  const indexPath = process.env.NODE_ENV === 'production' 
+    ? path.join(__dirname, 'client/build/index.html')
+    : path.join(__dirname, 'client/public/index.html');
+    
+  res.sendFile(indexPath);
 });
 
 // Global error handler

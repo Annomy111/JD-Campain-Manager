@@ -9,81 +9,55 @@ const taskValidation = require('../validation/taskValidation');
 const errorHandler = require('../middleware/errorHandler');
 const config = require('../config/constants');
 
-// Middleware composition
-const composeMiddleware = (validationSchema, ttl, controller) => {
-  const middlewares = [auth.protect];
-  
-  if (validationSchema) {
-    middlewares.push(validate(validationSchema));
-  }
-  
-  middlewares.push(checkTaskAccess);
-  
-  if (ttl) {
-    middlewares.push(cache.route({ ttl }));
-  }
-  
-  // Add the error-wrapped controller as the final middleware
-  middlewares.push(errorHandler(controller));
-  
-  return middlewares;
-};
-
 // Base routes
-router.route('/')
-  .get(
-    ...composeMiddleware(
-      taskValidation.getTasks,
-      config.cache.defaultTTL,
-      taskController.getAllTasks
-    )
-  )
-  .post(
-    ...composeMiddleware(
-      taskValidation.createTask,
-      null,
-      taskController.createTask
-    )
-  );
+router.get('/', 
+  auth.protect,
+  validate(taskValidation.getTasks),
+  checkTaskAccess,
+  errorHandler(taskController.getAllTasks)
+);
 
-router.route('/:id')
-  .get(
-    ...composeMiddleware(
-      taskValidation.getTask,
-      config.cache.shortTTL,
-      taskController.getTask
-    )
-  )
-  .patch(
-    ...composeMiddleware(
-      taskValidation.updateTask,
-      null,
-      taskController.updateTask
-    )
-  )
-  .delete(
-    ...composeMiddleware(
-      taskValidation.deleteTask,
-      null,
-      taskController.deleteTask
-    )
-  );
+router.post('/',
+  auth.protect,
+  validate(taskValidation.createTask),
+  checkTaskAccess,
+  errorHandler(taskController.createTask)
+);
+
+router.get('/:id',
+  auth.protect,
+  validate(taskValidation.getTask),
+  checkTaskAccess,
+  errorHandler(taskController.getTask)
+);
+
+router.patch('/:id',
+  auth.protect,
+  validate(taskValidation.updateTask),
+  checkTaskAccess,
+  errorHandler(taskController.updateTask)
+);
+
+router.delete('/:id',
+  auth.protect,
+  validate(taskValidation.deleteTask),
+  checkTaskAccess,
+  errorHandler(taskController.deleteTask)
+);
 
 // Special actions
 router.patch('/:id/progress',
-  ...composeMiddleware(
-    taskValidation.updateProgress,
-    null,
-    taskController.updateTaskProgress
-  )
+  auth.protect,
+  validate(taskValidation.updateProgress),
+  checkTaskAccess,
+  errorHandler(taskController.updateTaskProgress)
 );
 
 router.patch('/:id/toggle-complete',
-  ...composeMiddleware(
-    taskValidation.toggleComplete,
-    null,
-    taskController.toggleTaskComplete
-  )
+  auth.protect,
+  validate(taskValidation.updateTask),
+  checkTaskAccess,
+  errorHandler(taskController.toggleTaskComplete)
 );
 
 module.exports = router;

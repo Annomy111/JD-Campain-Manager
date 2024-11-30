@@ -5,57 +5,51 @@ const auth = require('../middleware/auth');
 const checkTaskAccess = require('../middleware/checkTaskAccess');
 const validateJoi = require('../middleware/validateJoi');
 const taskValidation = require('../validation/taskValidation');
-const errorHandler = require('../middleware/errorHandler');
-const config = require('../config/constants');
 
 // Base routes
-router.get('/', [
-  auth.protect,
-  checkTaskAccess,
-  errorHandler(taskController.getAllTasks)
-]);
+router.get('/', 
+  auth,
+  taskController.getAllTasks
+);
 
-router.post('/', [
-  auth.protect,
+router.post('/',
+  auth,
   validateJoi(taskValidation.createTask),
-  checkTaskAccess,
-  errorHandler(taskController.createTask)
-]);
+  taskController.createTask
+);
 
-router.get('/:id', [
-  auth.protect,
-  validateJoi(taskValidation.getTask),
+router.get('/:id',
+  auth,
   checkTaskAccess,
-  errorHandler(taskController.getTask)
-]);
+  taskController.getTask
+);
 
-router.patch('/:id', [
-  auth.protect,
+router.patch('/:id',
+  auth,
   validateJoi(taskValidation.updateTask),
   checkTaskAccess,
-  errorHandler(taskController.updateTask)
-]);
+  taskController.updateTask
+);
 
-router.delete('/:id', [
-  auth.protect,
-  validateJoi(taskValidation.deleteTask),
+router.delete('/:id',
+  auth,
   checkTaskAccess,
-  errorHandler(taskController.deleteTask)
-]);
+  taskController.deleteTask
+);
 
 // Special actions
-router.patch('/:id/progress', [
-  auth.protect,
+router.patch('/:id/progress',
+  auth,
   validateJoi(taskValidation.updateProgress),
   checkTaskAccess,
-  errorHandler(taskController.updateTaskProgress)
-]);
+  taskController.updateTaskProgress
+);
 
-router.patch('/:id/toggle-complete', [
-  auth.protect,
+router.patch('/:id/toggle-complete',
+  auth,
   validateJoi(taskValidation.updateTask),
   checkTaskAccess,
-  errorHandler(taskController.toggleTaskComplete)
-]);
+  taskController.toggleTaskComplete
+);
 
 module.exports = router;

@@ -21,13 +21,17 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
+// Port configuration
+const API_PORT = process.env.API_PORT || 5000;
+const CLIENT_PORT = process.env.PORT || 3000;
+
 // Create HTTP server
 const server = http.createServer(app);
 
 // Socket.io setup
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
+    origin: process.env.CLIENT_URL || `http://localhost:${CLIENT_PORT}`,
     methods: ["GET", "POST"],
     credentials: true
   }
@@ -58,7 +62,6 @@ io.on('connection', (socket) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
+server.listen(API_PORT, () => {
+  logger.info(`Server running on port ${API_PORT}`);
 });

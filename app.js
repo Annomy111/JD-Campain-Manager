@@ -91,7 +91,6 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 app.use('/api/auth', require('./server/routes/auth'));
 app.use('/api/tasks', require('./server/routes/taskRoutes'));
 app.use('/api/districts', require('./server/routes/districts'));
-app.use('/api/campaigns', require('./server/routes/campaigns'));
 app.use('/api/files', require('./server/routes/files'));
 app.use('/api/participants', require('./server/routes/participants'));
 

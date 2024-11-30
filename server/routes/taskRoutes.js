@@ -10,7 +10,7 @@ const errorHandler = require('../middleware/errorHandler');
 const config = require('../config/constants');
 
 // Middleware composition
-const taskMiddleware = (validationSchema, ttl) => {
+const composeMiddleware = (validationSchema, ttl, controller) => {
   const middlewares = [auth.protect];
   
   if (validationSchema) {
@@ -23,43 +23,67 @@ const taskMiddleware = (validationSchema, ttl) => {
     middlewares.push(cache.route({ ttl }));
   }
   
+  // Add the error-wrapped controller as the final middleware
+  middlewares.push(errorHandler(controller));
+  
   return middlewares;
 };
 
 // Base routes
 router.route('/')
   .get(
-    ...taskMiddleware(taskValidation.getTasks, config.cache.defaultTTL),
-    errorHandler(taskController.getAllTasks)
+    ...composeMiddleware(
+      taskValidation.getTasks,
+      config.cache.defaultTTL,
+      taskController.getAllTasks
+    )
   )
   .post(
-    ...taskMiddleware(taskValidation.createTask),
-    errorHandler(taskController.createTask)
+    ...composeMiddleware(
+      taskValidation.createTask,
+      null,
+      taskController.createTask
+    )
   );
 
 router.route('/:id')
   .get(
-    ...taskMiddleware(taskValidation.getTask, config.cache.shortTTL),
-    errorHandler(taskController.getTask)
+    ...composeMiddleware(
+      taskValidation.getTask,
+      config.cache.shortTTL,
+      taskController.getTask
+    )
   )
   .patch(
-    ...taskMiddleware(taskValidation.updateTask),
-    errorHandler(taskController.updateTask)
+    ...composeMiddleware(
+      taskValidation.updateTask,
+      null,
+      taskController.updateTask
+    )
   )
   .delete(
-    ...taskMiddleware(taskValidation.deleteTask),
-    errorHandler(taskController.deleteTask)
+    ...composeMiddleware(
+      taskValidation.deleteTask,
+      null,
+      taskController.deleteTask
+    )
   );
 
 // Special actions
 router.patch('/:id/progress',
-  ...taskMiddleware(taskValidation.updateProgress),
-  errorHandler(taskController.updateTaskProgress)
+  ...composeMiddleware(
+    taskValidation.updateProgress,
+    null,
+    taskController.updateTaskProgress
+  )
 );
 
 router.patch('/:id/toggle-complete',
-  ...taskMiddleware(taskValidation.toggleComplete),
-  errorHandler(taskController.toggleTaskComplete)
+  ...composeMiddleware(
+    taskValidation.toggleComplete,
+    null,
+    taskController.toggleTaskComplete
+  )
 );
 
 module.exports = router;

@@ -91,24 +91,23 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 app.use('/api/auth', require('./server/routes/auth'));
 app.use('/api/tasks', require('./server/routes/taskRoutes'));
 app.use('/api/districts', require('./server/routes/districts'));
-app.use('/api/events', require('./server/routes/events'));
+app.use('/api/campaigns', require('./server/routes/campaigns'));
 app.use('/api/files', require('./server/routes/files'));
 app.use('/api/participants', require('./server/routes/participants'));
 
-// The "catchall" handler: for any request that doesn't
-// match one above, send back React's index.html file.
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build/index.html'));
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date(),
+    uptime: process.uptime()
+  });
 });
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date(),
-    uptime: process.uptime(),
-    memoryUsage: process.memoryUsage()
-  });
+// The "catchall" handler: for any request that doesn't match an API route,
+// send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/build/index.html'));
 });
 
 // Global error handler

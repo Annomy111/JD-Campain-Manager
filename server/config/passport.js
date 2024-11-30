@@ -65,61 +65,65 @@ passport.use(new LocalStrategy(
 ));
 
 // Google Strategy
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.SERVER_URL || 'http://192.168.178.129:5000'}/auth/google/callback`,
-      proxy: true
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        console.log('Google OAuth Profile:', JSON.stringify(profile, null, 2));
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: `${process.env.SERVER_URL || 'http://192.168.178.129:5000'}/auth/google/callback`,
+        proxy: true
+      },
+      async (accessToken, refreshToken, profile, done) => {
+        try {
+          console.log('Google OAuth Profile:', JSON.stringify(profile, null, 2));
 
-        if (!profile.emails || !profile.emails[0] || !profile.emails[0].value) {
-          console.error('No email provided by Google');
-          return done(new Error('No email provided by Google'), null);
+          if (!profile.emails || !profile.emails[0] || !profile.emails[0].value) {
+            console.error('No email provided by Google');
+            return done(new Error('No email provided by Google'), null);
+          }
+
+          const email = profile.emails[0].value.toLowerCase();
+
+          // First try to find by googleId
+          let user = await User.findOne({ googleId: profile.id });
+
+          if (!user) {
+            // If not found by googleId, try by email
+            user = await User.findOne({ email });
+          }
+
+          if (user) {
+            // Update existing user
+            user.googleId = profile.id;
+            user.name = profile.displayName;
+            user.picture = profile.photos?.[0]?.value || user.picture;
+            user.lastLogin = new Date();
+            
+            await user.save();
+            console.log('Updated existing user:', user);
+            return done(null, user);
+          }
+
+          // Create new user
+          const newUser = await User.create({
+            googleId: profile.id,
+            email: email,
+            name: profile.displayName,
+            picture: profile.photos?.[0]?.value,
+            role: 'volunteer',
+            lastLogin: new Date()
+          });
+
+          console.log('Created new user:', newUser);
+          return done(null, newUser);
+        } catch (err) {
+          console.error('Error in Google Strategy:', err);
+          return done(err, null);
         }
-
-        const email = profile.emails[0].value.toLowerCase();
-
-        // First try to find by googleId
-        let user = await User.findOne({ googleId: profile.id });
-
-        if (!user) {
-          // If not found by googleId, try by email
-          user = await User.findOne({ email });
-        }
-
-        if (user) {
-          // Update existing user
-          user.googleId = profile.id;
-          user.name = profile.displayName;
-          user.picture = profile.photos?.[0]?.value || user.picture;
-          user.lastLogin = new Date();
-          
-          await user.save();
-          console.log('Updated existing user:', user);
-          return done(null, user);
-        }
-
-        // Create new user
-        const newUser = await User.create({
-          googleId: profile.id,
-          email: email,
-          name: profile.displayName,
-          picture: profile.photos?.[0]?.value,
-          role: 'volunteer',
-          lastLogin: new Date()
-        });
-
-        console.log('Created new user:', newUser);
-        return done(null, newUser);
-      } catch (err) {
-        console.error('Error in Google Strategy:', err);
-        return done(err, null);
       }
-    }
-  )
-);
+    )
+  );
+} else {
+  console.log('Google OAuth is disabled: Missing client ID or secret');
+}

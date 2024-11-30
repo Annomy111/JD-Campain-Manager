@@ -9,6 +9,7 @@ const MongoStore = require('connect-mongo');
 const rateLimit = require('express-rate-limit');
 const winston = require('winston');
 const config = require('./server/config/constants');
+const path = require('path');
 
 // Initialize express app
 const app = express();
@@ -83,13 +84,22 @@ app.use(passport.initialize());
 app.use(passport.session());
 require('./server/config/passport');
 
-// Routes
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'client/build')));
+
+// API Routes
 app.use('/api/auth', require('./server/routes/auth'));
 app.use('/api/tasks', require('./server/routes/taskRoutes'));
 app.use('/api/districts', require('./server/routes/districts'));
 app.use('/api/events', require('./server/routes/events'));
 app.use('/api/files', require('./server/routes/files'));
 app.use('/api/participants', require('./server/routes/participants'));
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/build/index.html'));
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -121,12 +131,14 @@ app.use((req, res) => {
   res.status(404).json({ message: 'Route nicht gefunden' });
 });
 
-// Database connection
-if (process.env.NODE_ENV !== 'test') {
-  mongoose.connect(process.env.MONGODB_URI || config.mongodb.defaultUri)
-    .then(() => logger.info('MongoDB connected successfully'))
-    .catch(err => logger.error('MongoDB connection error:', err));
-}
+// MongoDB Connection
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => {
+    logger.info('MongoDB connected successfully');
+  })
+  .catch((err) => {
+    logger.error('MongoDB connection error:', err);
+  });
 
 // Handle uncaught exceptions
 process.on('uncaughtException', (err) => {

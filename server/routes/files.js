@@ -29,32 +29,11 @@ const upload = multer({
 });
 
 // Datei-Upload-Route
-router.post('/upload', upload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'Keine Datei hochgeladen' });
-    }
-
-    const fileData = {
-      id: path.parse(req.file.filename).name,
-      originalName: req.file.originalname,
-      filename: req.file.filename,
-      mimetype: req.file.mimetype,
-      size: req.file.size,
-      uploadDate: new Date(),
-      path: req.file.path
-    };
-
-    // Hier könnte man die Datei-Informationen in einer Datenbank speichern
-    
-    res.json({
-      message: 'Datei erfolgreich hochgeladen',
-      file: fileData
-    });
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: 'Fehler beim Hochladen der Datei' });
-  }
+router.post('/upload', (req, res) => {
+  res.status(503).json({ 
+    status: 'error',
+    message: 'File upload functionality is temporarily disabled'
+  });
 });
 
 // Datei-Download-Route

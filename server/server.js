@@ -21,7 +21,7 @@ app.use((err, req, res, next) => {
 // Middleware
 app.use(morgan('dev'));
 app.use(cors({
-  origin: 'http://localhost:3005',
+  origin: process.env.CLIENT_URL || 'http://localhost:3005',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
@@ -64,6 +64,14 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {

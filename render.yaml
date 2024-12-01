@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: campaign-manager-backend
+    env: node
+    buildCommand: cd server && npm install
+    startCommand: cd server && node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: CLIENT_URL
+        fromService:
+          name: campaign-manager-frontend
+          type: web
+          property: url
+
+  - type: web
+    name: campaign-manager-frontend
+    env: static
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/build
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          name: campaign-manager-backend
+          type: web
+          property: url

@@ -10,10 +10,7 @@ services:
       - key: MONGODB_URI
         sync: false
       - key: CLIENT_URL
-        fromService:
-          name: campaign-manager-frontend
-          type: web
-          property: url
+        value: https://campaign-manager-frontend.onrender.com
 
   - type: web
     name: campaign-manager-frontend
@@ -22,7 +19,4 @@ services:
     staticPublishPath: ./client/build
     envVars:
       - key: REACT_APP_API_URL
-        fromService:
-          name: campaign-manager-backend
-          type: web
-          property: url
+        value: https://campaign-manager-backend.onrender.com

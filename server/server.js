@@ -2,12 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
 const morgan = require('morgan');
+const cors = require('cors');
 const { seedEvents } = require('./data/demoEvents');
 const { seedUsers } = require('./data/seedUsers');
 const districtRoutes = require('./routes/districts');
 const fileRoutes = require('./routes/files');
 const eventRoutes = require('./routes/events');
-const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
@@ -20,59 +20,41 @@ app.use((err, req, res, next) => {
 
 // Middleware
 app.use(morgan('dev'));
+app.use(cors({
+  origin: 'http://localhost:3005',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Simple CORS middleware
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+// MongoDB Atlas connection
+const MONGODB_URI = 'mongodb+srv://dietermeier82:7i4XxjLYal4P0Dxx@cluster0.3lg9t.mongodb.net/jdcampaignmanager?retryWrites=true&w=majority&appName=Cluster0';
+
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+}).then(() => {
+  console.log('Connected to MongoDB Atlas');
   
-  // Handle preflight
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  next();
+  // Seed data only if needed (first time setup)
+  seedEvents()
+    .then(() => console.log('Events seeded successfully'))
+    .catch(err => console.error('Error seeding events:', err));
+    
+  seedUsers()
+    .then(() => console.log('Users seeded successfully'))
+    .catch(err => console.error('Error seeding users:', err));
+})
+.catch((err) => {
+  console.error('MongoDB Atlas connection error:', err);
 });
-
-// MongoDB connection with debug logging
-mongoose.set('debug', true);
-
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/spd-campaign', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log('MongoDB Connected Successfully');
-    
-    // Seed initial data
-    await seedUsers();
-    console.log('Users seeded successfully');
-    
-    // Überprüfe vorhandene Events
-    const Event = require('./models/Event');
-    const existingEvents = await Event.find();
-    
-    if (existingEvents.length === 0) {
-      // Seed Events nach erfolgreicher Datenbankverbindung
-      await seedEvents();
-    }
-    
-  } catch (err) {
-    console.error('MongoDB connection error:', err);
-    process.exit(1);
-  }
-};
-
-connectDB();
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // API Routes
-app.use('/api/auth', authRoutes);
 app.use('/api/districts', districtRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/events', eventRoutes);
